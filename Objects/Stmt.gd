@@ -1,0 +1,80 @@
+extends Node
+
+class Stmt extends Object:
+	var immediate_class
+	
+	func _init(c = "Stmt"):
+		self.immediate_class = c
+		
+	func accept(visitor):
+		return visitor.call(self.immediate_class, self)
+		
+	func get_immediate_class():
+		return self.immediate_class
+
+class If extends Stmt:
+	var condition
+	var thenBranch
+	var elseBranch
+	
+	func _init(condition, thenBranch, elseBranch).("If"):
+		self.condition = condition
+		self.thenBranch = thenBranch
+		self.elseBranch = elseBranch
+		
+
+class For extends Stmt:
+	var initializer
+	var condition
+	var increment
+	
+	func _init(initializer = null, condition = null, increment = null).("For"):
+		self.initializer = initializer
+		self.condition = condition
+		self.increment = increment
+	
+class While extends Stmt:
+	var condition
+	var body
+	
+	func _init(condition, body).("While"):
+		self.condition = condition
+		self.body = body
+		
+class Print extends Stmt:
+	var expression
+	
+	func _init(expression).("Print"):
+		self.expression = expression
+		
+		
+class Expression extends Stmt:
+	var expression
+	
+	func _init(expression).("Expression"):
+		self.expression = expression 
+		
+
+class Block extends Stmt:
+	var statements
+	
+	func _init(statements).("Block"):
+		self.statements = statements
+
+class Var extends Stmt:
+	var token_name
+	var initializer
+	
+	func _init(token_name, initializer).("Var"):
+		self.token_name = token_name
+		self.initializer = initializer
+	
+class Function extends Stmt:
+	var token_name
+	var parameters
+	var body
+	
+	func _init(token_name, parameters, body).("Function"):
+		self.token_name = token_name
+		self.parameters = parameters
+		self.body = body
