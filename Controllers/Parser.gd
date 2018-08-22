@@ -43,8 +43,10 @@ func declaration():
 	# Errors would be thrown here, using "Synchronize" to make sure the token stream doesn't crash
 	
 func statement():
-	if _match([TYPE.PRINT]): # Not accessing this properly?
+	if _match([TYPE.PRINT]):
 		return printStatement()
+	if _match([TYPE.RETURN]):
+		return returnStatement() # Returning to who?
 	if _match([TYPE.LEFT_BRACE]):
 		return Stmt.Block.new(block())
 	if _match([TYPE.IF]):
@@ -108,6 +110,14 @@ func printStatement():
 	consume(TYPE.SEMICOLON, "Expect ';' after value.") # This may be the issue?
 	return Stmt.Print.new(value)
 	
+func returnStatement():
+	var keyword = previous()
+	var value = null;
+	if !check(TYPE.SEMICOLON):
+		value = expression()
+	consume(TYPE.SEMICOLON, "Expect ':' after return value.")
+	return Stmt.Return.new(keyword, value)
+
 func varDeclaration():
 	var token_name = consume(TYPE.IDENTIFIER, "Expect variable name.")
 	var initializer = null

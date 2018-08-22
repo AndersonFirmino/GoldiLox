@@ -8,12 +8,19 @@ const Callable = preload("res://Objects/LoxCallable.gd")
 var globals = ENVIROMENT.new(null)
 var enviroment = globals
 
+# Working with retvals:
+signal RETURN
+var exited_early = false
+
 func _init():
 	self.globals.define('clock', Callable.Clock.new())
 
 
 func interpret(statements):
 	for statement in statements:
+		# Not pretty but hopefully it will
+		if exited_early:
+			return
 		execute(statement)
 	# They throw an error here somewhere. Need to figure out a proper way to replicate it
 	
@@ -34,6 +41,9 @@ func executeBlock(statements, enviroment):
 	# We go into the new enviroment scope
 	self.enviroment = enviroment
 	for statement in statements:
+		# We're hitting this one repeatedly here? 
+		if self.exited_early:
+			break
 		# These are all being executed in the new scope
 		execute(statement)
 		
@@ -86,6 +96,17 @@ func Print(statement):
 	var value = evaluate(statement.expression)
 	print(stringify(value))
 	return null
+
+func Return(statement):
+	var value = null
+	if statement.value != null:
+		value = evaluate(statement.value)
+	# Emulating a throw
+	self.exited_early = true
+	emit_signal("RETURN", value)
+
+
+    
 	
 func Var(statement):
 	var value = null

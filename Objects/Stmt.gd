@@ -11,6 +11,15 @@ class Stmt extends Object:
 		
 	func get_immediate_class():
 		return self.immediate_class
+	
+class Return extends Stmt:
+	var keyword
+	var value # KEEP TRACK OF THIS
+	
+	func _init(keyword, value).("Return"):
+		self.keyword = keyword
+		self.value = value
+
 
 class If extends Stmt:
 	var condition
