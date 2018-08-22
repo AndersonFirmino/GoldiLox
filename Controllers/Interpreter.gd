@@ -6,7 +6,7 @@ const Callable = preload("res://Objects/LoxCallable.gd")
 
 
 var globals = ENVIROMENT.new(null)
-var enviroment = globals
+var enviroment = globals # Not always globals?
 
 # Working with retvals:
 signal RETURN
@@ -81,7 +81,7 @@ func Expression(statement):
 	return null
 	
 func Function(statement):
-	var function = Callable.Function.new(statement)
+	var function = Callable.Function.new(statement, self.enviroment)
 	enviroment.define(statement.token_name.lexeme, function)
 	return null
 	

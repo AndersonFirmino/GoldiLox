@@ -30,12 +30,14 @@ class Clock extends Callable:
 		
 class Function extends Callable:
 	var declaration
+	var closure      
 	
-	# We
+	# We store the return value to return here, defaults to null in call
 	var returnValue
 	
-	func _init(declaration):
+	func _init(declaration, closure):
 		self.declaration = declaration
+		self.closure = closure # Where do we define this?
 		
 	func Call(interpreter, arguments):
 		# We initialize the return value to null
@@ -43,7 +45,7 @@ class Function extends Callable:
 #		ifbool is_connected( String signal, Object target, String method ) c
 		if not interpreter.is_connected("RETURN", self, "setReturnValue"):
 			interpreter.connect("RETURN", self, "setReturnValue")
-		var enviroment = interpreter.ENVIROMENT.new(interpreter.globals)
+		var enviroment = interpreter.ENVIROMENT.new(self.closure)
 		for i in range(declaration.parameters.size()):
 			enviroment.define(declaration.parameters[i].lexeme, arguments[i])
 			

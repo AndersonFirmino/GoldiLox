@@ -9,7 +9,7 @@ class enviroment:
 	
 	func define(title, value):
 		values[title] = value
-		print("ADDING VARIABLE with NAME: ", title, " AND VALUE: ", value)
+#		print("ADDING VARIABLE with NAME: ", title, " AND VALUE: ", value)
 		
 	func get(token):
 		if values.has(token.lexeme):
