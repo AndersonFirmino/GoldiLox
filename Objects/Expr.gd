@@ -2,11 +2,9 @@ extends Object
 
 class Expr extends Object:
 	var immediate_class
-	var current_class
 	
 	func _init(c = "Expr"):
 		self.immediate_class = c
-		self.current_class == "Callable"
 
 	func accept(visitor):
 		return visitor.call(self.immediate_class, self)

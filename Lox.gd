@@ -2,6 +2,7 @@ extends Node
 
 const Scanner = preload("res://Controllers/Scanner.gd")
 const Parser = preload("res://Controllers/Parser.gd")
+const Resolver = preload("res://Controllers/Resolver.gd")
 
 # Interpreter is static so it can hold state
 onready var Interpreter = preload("res://Controllers/Interpreter.gd").new()
@@ -39,7 +40,7 @@ func runFile(path):
 #		get_tree().quit()
 #	if Error.hadRuntimeError:
 #		get_tree().quit()
-#
+
 func runPrompt():
 	# runPrompt just re-connects signals, so input goes directly into run from input
 	input.disconnect("text_entered", self, "_initial_input")
@@ -51,12 +52,16 @@ func run(source):
 	var tokens = scanner.scanTokens() # Seems to be having trouble reading?
 	var parser = Parser.new(tokens)
 	var statements = parser.parse()
-	
 	if Error.hadError:
 		return
-	
+
+	var resolver = Resolver.new(Interpreter)
+	resolver.resolve_loop(statements)
+
+	if Error.hadError:
+		return
 	Interpreter.interpret(statements)
-	
+
 	scanner.queue_free()
 	parser.queue_free()
 	input.text = ""

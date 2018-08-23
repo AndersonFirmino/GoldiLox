@@ -7,13 +7,15 @@ const Callable = preload("res://Objects/LoxCallable.gd")
 
 var globals = ENVIROMENT.new(null)
 var enviroment = globals # Not always globals?
+var locals = {}
 
 # Working with retvals:
 signal RETURN
 var exited_early = false
 
 func _init():
-	self.globals.define('clock', Callable.Clock.new())
+	pass
+#	self.globals.define('Clock', Callable.Clock.new())
 
 
 func interpret(statements):
@@ -26,7 +28,10 @@ func interpret(statements):
 	
 func execute(statement):
 	statement.accept(self)
-	
+
+func resolve(expression, depth):
+	locals[expression] = depth
+
 func Block(statement):
 	# We are passing in a NEW enviroment, and passing our *current* enviroment to its constructor so it can
 	# check one level up
@@ -83,7 +88,26 @@ func Expression(statement):
 func Function(statement):
 	var function = Callable.Function.new(statement, self.enviroment)
 	enviroment.define(statement.token_name.lexeme, function)
-	return null
+#	var function = Callable.Function.new(statement, self.enviroment)
+#
+##		func assignAt(distance, token_name, value):	// What we want to implement?
+#	var distance
+#	if locals.has(statement):
+#		distance = locals[statement]
+#		enviroment.assignAt(distance, statement.token_name, function) # Maybe Errors
+#	else:
+#		enviroment.assign(statement.token_name, function)
+##		enviroment.define(statement.token_name.lexeme, function)
+#	return null
+	
+#	var distance = locals[expr]
+#	if distance != null:
+#		enviroment.assignAt(distance, expr.token_name, value)
+#	else:
+#		globals.assign(expr.token_name, value)
+##	enviroment.assign(expr.token_name, value)
+#	return value
+#
 	
 func If(statement):
 	if isTruthy(evaluate(statement.condition)):
@@ -123,7 +147,12 @@ func While(statement):
 
 func Assign(expr):
 	var value = evaluate(expr.value)
-	enviroment.assign(expr.token_name, value)
+	var distance
+	if locals.has(expr):
+		distance = locals[expr]
+		enviroment.assignAt(distance, expr.token_name, value)
+	else:
+		globals.assign(expr.token_name, value)
 	return value
 	
 func Unary(expr):
@@ -138,7 +167,17 @@ func Unary(expr):
 	return null
 	
 func Variable(expr):
-	return enviroment.get(expr.token_name)
+	return lookUpVariable(expr.token_name, expr);            
+#	return enviroment.get(expr.token_name)
+
+func lookUpVariable(token_name, expression):
+	var distance = null
+	if locals.has(expression):
+		distance = locals[expression]
+	if distance != null:
+		return enviroment.getAt(distance, token_name.lexeme)
+	else:
+		return globals.get(token_name)
 
 func isTruthy(object):
 	if object == null: 
@@ -191,8 +230,8 @@ func Call(expression):
 		arguments.append(evaluate(argument))
 		
 #	if not callee is Callable:
-	if not callee.current_class == "Callable":
-		print('error, can only call functions and classes.')
+	if not callee.immediate_class == "Callable" or not callee.immediate_class == "Function":
+		print('class is ', callee.immediate_class, ' line 238 Interpreter')
 #		throw new RuntimeError(expr.paren, "Can only call functions and classes.")
 
 	var function = callee

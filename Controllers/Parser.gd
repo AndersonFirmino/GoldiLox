@@ -17,7 +17,6 @@ func parse():
 	
 func expression():
 	return assignment()
-#	return equality()
 
 func declaration():
 	if _match([TYPE.VAR]):
@@ -48,7 +47,7 @@ func statement():
 	if _match([TYPE.RETURN]):
 		return returnStatement() # Returning to who?
 	if _match([TYPE.LEFT_BRACE]):
-		return Stmt.Block.new(block())
+		return Stmt.Block.new(block()) # ????
 	if _match([TYPE.IF]):
 		return ifStatement()
 	if _match([TYPE.WHILE]):
@@ -58,7 +57,6 @@ func statement():
 	return expressionStatement()
 
 func forStatement():
-	print('hello from for')
 	consume(TYPE.LEFT_PAREN, "Expect '(' after 'for'.")
 	var initializer = null
 	if _match([TYPE.SEMICOLON]):
@@ -67,41 +65,32 @@ func forStatement():
 		initializer = varDeclaration()
 	else:
 		initializer = expressionStatement()
-		
 	var condition = null;
 	if !check(TYPE.SEMICOLON):
 		condition = expression()
 	consume(TYPE.SEMICOLON, "Expect ';' after loop condition.")
-	
 	var increment = null;
 	if !check(TYPE.RIGHT_PAREN):
 		increment = expression()
 	consume(TYPE.RIGHT_PAREN, "Expect ')' after for clauses.")
-	
 	var body = statement()
-	
 	if increment != null:
 		body = Stmt.Block.new([body, Stmt.Expression.new(increment)])
-		
 	if condition == null:
 		condition = Expr.Literal.new(true) # Infinite loop?
 	body = Stmt.While.new(condition, body)
-		
 	if initializer != null:
 		body = Stmt.Block.new([initializer, body])
-		
 	return body
 
 func ifStatement():
 	consume(TYPE.LEFT_PAREN, "Expect '(' after 'if'.")
 	var condition = expression()
 	consume(TYPE.RIGHT_PAREN, "Expect ')' after if condition.")
-	
 	var thenBranch = statement()
 	var elseBranch = null;
 	if _match([TYPE.ELSE]):
 		elseBranch = statement()
-	
 	return Stmt.If.new(condition, thenBranch, elseBranch)
 	
 	
@@ -164,12 +153,9 @@ func block():
 func assignment():
 #	var expr = equality()
 	var expr = Or() # or is reserved
-	
-	
 	if _match([TYPE.EQUAL]):
 		var equals = previous()
 		var value = assignment() # Be wary of infinite loops
-		
 		if expr.get_immediate_class() == "Variable":
 			var token_name = expr.token_name # Think this is right?
 			return Expr.Assign.new(token_name, value) # If we get an error, we haven't returned this properly
@@ -181,10 +167,8 @@ func Or():
 	
 	while _match([TYPE.OR]):
 		var operator = previous()
-#		print("from or, operator lexeme is : ", operator.lexeme)
 		var right = And()
 		expr = Expr.Logical.new(expr, operator, right)
-		
 	return expr
 
 func And():
@@ -203,7 +187,6 @@ func equality():
 		var operator = previous()
 		var right = comparison()
 		expr = Expr.Binary.new(expr, operator, right)
-		
 	return expr
 	
 func comparison():
@@ -213,7 +196,6 @@ func comparison():
 		var operator = previous()
 		var right = addition()
 		expr = Expr.Binary.new(expr, operator, right)
-			
 	return expr
 	
 func addition():
@@ -223,17 +205,14 @@ func addition():
 		var operator = previous()
 		var right = multiplication()
 		expr = Expr.Binary.new(expr, operator, right)
-		
 	return expr
 	
 func multiplication():
 		var expr = unary()
-		
 		while _match([TYPE.SLASH, TYPE.STAR]):
 			var operator = previous()
 			var right = unary()
 			expr = Expr.Binary.new(expr, operator, right)
-		
 		return expr                                           
 	
 func unary():
@@ -269,7 +248,6 @@ func call():
 			expr = finishCall(expr)
 		else:
 			break
-
 	return expr
 
 func primary():

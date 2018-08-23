@@ -7,7 +7,7 @@ class Stmt extends Object:
 		self.immediate_class = c
 		
 	func accept(visitor):
-		return visitor.call(self.immediate_class, self)
+		return visitor.call(self.immediate_class, self) # Next step is "resolve-expression"
 		
 	func get_immediate_class():
 		return self.immediate_class
@@ -84,6 +84,7 @@ class Function extends Stmt:
 	var body
 	
 	func _init(token_name, parameters, body).("Function"):
+		print('Func statement created from stmt line 89')
 		self.token_name = token_name
 		self.parameters = parameters
 		self.body = body

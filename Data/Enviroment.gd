@@ -9,8 +9,21 @@ class enviroment:
 	
 	func define(title, value):
 		values[title] = value
-#		print("ADDING VARIABLE with NAME: ", title, " AND VALUE: ", value)
 		
+	func getAt(distance, lexeme):
+		return ancestor(distance).values[lexeme] # May be wrong syntax
+	
+	func assignAt(distance, token_name, value):
+		ancestor(distance).values[token_name.lexeme] = value
+	
+	func ancestor(distance):
+		var i = 0
+		var enviroment = self
+		while i < distance:
+			enviroment = enviroment.enclosing
+			i += 1
+		return enviroment
+
 	func get(token):
 		if values.has(token.lexeme):
 			return values[token.lexeme]

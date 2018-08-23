@@ -1,23 +1,21 @@
 extends Node
 
-class Callable:
+class Callable extends Object:
 	var parameters = []
-	var current_class
+	var immediate_class
 	
-	func _init():
-		self.current_class = "Callable"
+	func _init(c = "Callable"):
+		self.immediate_class = c
 		
-#	func Call(interpreter, arguments):
-#		pass
-#
-#	func arity():
-#		return self.parameters.size()
+	func accept(visitor):
+		print('visitor is, ', visitor, ' LoxCallable line 11')
+		visitor.call(self.current_class, self)
 		
 class Clock extends Callable:
-	# Native Function
-	func _init():
+	var token_name = "Clock"
+	
+	func _init().("Function"):
 		self.parameters = 0
-		print("clock created")
 	
 	func arity():
 		return 0
@@ -29,13 +27,14 @@ class Clock extends Callable:
 		return "<native fn>"
 		
 class Function extends Callable:
+	
 	var declaration
 	var closure      
 	
 	# We store the return value to return here, defaults to null in call
 	var returnValue
 	
-	func _init(declaration, closure):
+	func _init(declaration, closure).("Function"):
 		self.declaration = declaration
 		self.closure = closure # Where do we define this?
 		
