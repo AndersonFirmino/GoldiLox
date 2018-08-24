@@ -40,13 +40,23 @@ func Block(statement):
 	return null
 	
 func Class(statement):
+	var superclass = null
+	if statement.superclass != null:
+		superclass = evaluate(statement.superclass)
+		if !superclass is LoxClass:
+			Error.error(statement.superclass.token_name, "Superclass must be a class")
 	enviroment.define(statement.token_name.lexeme, null)
+	if statement.superclass != null:
+		enviroment = ENVIROMENT.new(enviroment)
+		enviroment.define("super", superclass)
 	var methods = {} # Resolver counterpart may require key access, rather than array loop
 	for method in statement.methods:
 		# May be an issue here?
 		var function = Callable.Function.new(method, enviroment, method.token_name.lexeme == "init")
 		methods[method.token_name.lexeme] = function
-	var klass = LoxClass.new(statement.token_name.lexeme, methods) # May need to revist this
+	var klass = LoxClass.new(statement.token_name.lexeme, superclass, methods) # May need to revist this
+	if superclass != null:
+		enviroment = enviroment.enclosing
 	enviroment.assign(statement.token_name, klass)
 	return null
 	
@@ -96,6 +106,15 @@ func Set(expression):
 	var value = evaluate(expression.value)
 	object.set(expression.token_name, value)
 	return value
+	
+func Super(expression):
+	var distance = locals[expression] # May need to do a check?
+	var superclass = enviroment.getAt(distance, "super")
+	var object = enviroment.getAt(distance - 1, "this")
+	var method = superclass.findMethod(object, expression.method.lexeme)
+	if method == null:
+		Error.runTimeerror(expression.method, "Undefined property '" + expression.method.lexeme + "',")
+	return method
 	
 func This(expression):
 	return lookUpVariable(expression.keyword, expression)
@@ -154,9 +173,6 @@ func Return(statement):
 	# Emulating a throw
 	self.exited_early = true
 	emit_signal("RETURN", value)
-
-
-    
 	
 func Var(statement):
 	var value = null

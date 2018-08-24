@@ -29,13 +29,17 @@ func declaration():
 		return statement()
 		
 func classDeclaration():
+	var superclass = null
 	var token_name = consume(TYPE.IDENTIFIER, "Expect class name.")
+	if _match([TYPE.LESS]):
+		consume(TYPE.IDENTIFIER, "Expect superclass name.")
+		superclass = Expr.Variable.new(previous())
 	consume(TYPE.LEFT_BRACE, "Expect '{' before class body.")
 	var methods = []
 	while !check(TYPE.RIGHT_BRACE) and !isAtEnd():
 		methods.append(function("method"))
 	consume(TYPE.RIGHT_BRACE, "Expect '}' after class body")
-	return Stmt.Class.new(token_name, methods)
+	return Stmt.Class.new(token_name, superclass, methods)
 		
 # Modern version that is intended to handle errors
 #func declaration():
@@ -278,6 +282,11 @@ func primary():
 	
 	if _match([TYPE.NUMBER, TYPE.STRING]):
 		return Expr.Literal.new(previous().literal)
+	if _match([TYPE.SUPER]):
+		var keyword = previous()
+		consume(TYPE.DOT, "Expect '.' after ' super'.")
+		var method = consume(TYPE.IDENTIFIER, "Expect superclass method name.")
+		return Expr.Super.new(keyword, method)
 	if _match([TYPE.IDENTIFIER]):
 		return Expr.Variable.new(previous())
 	if _match([TYPE.LEFT_PAREN]):

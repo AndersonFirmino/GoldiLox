@@ -40,6 +40,14 @@ class Set extends Expr:
 		self.token_name = token_name
 		self.value = value
 		
+class Super extends Expr:
+	var keyword
+	var method
+	
+	func _init(keyword, method).("Super"):
+		self.keyword = keyword
+		self.method = method
+		
 class This extends Expr:
 	var keyword
 	

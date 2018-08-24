@@ -15,6 +15,7 @@ enum FunctionType {
 enum ClassType {
 	NONE
 	CLASS
+	SUBCLASS
 }
 
 func _init(interpreter):
@@ -33,7 +34,13 @@ func Class(statement):
 	var enclosingClass = currentClass
 	currentClass = ClassType.CLASS
 	declare(statement.token_name)
+	if statement.superclass != null:
+		currentClass = ClassType.SUBCLASS
+		resolve(statement.superclass)
 	define(statement.token_name)
+	if statement.superclass != null:
+		beginScope()
+		scopes.back()["super"] = true
 	beginScope()
 	scopes.back()["this"] = true
 	for method in statement.methods:
@@ -42,6 +49,8 @@ func Class(statement):
 			declaration = FunctionType.INITIALIZER # May be read as an int?
 		resolveFunction(method, declaration)
 	endScope()
+	if statement.superclass != null:
+		endScope()
 	currentClass = enclosingClass
 	return null
 	
@@ -106,6 +115,14 @@ func Logical(expression):
 func Set(expression):
 	resolve(expression.value)
 	resolve(expression.object)
+	return null
+	
+func Super(expression):
+	if currentClass == ClassType.NONE:
+		Error.error(expression.keyword, "Cannot use 'super' outside of a class.")
+	elif currentClass != ClassType.SUBCLASS:
+		Error.error(expression.keyword, "Cannot use 'super' in a class with no superclass.")
+	resolveLocal(expression, expression.keyword)
 	return null
 	
 func This(expression):

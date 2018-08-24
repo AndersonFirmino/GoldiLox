@@ -72,10 +72,12 @@ class Block extends Stmt:
 		
 class Class extends Stmt:
 	var token_name
+	var superclass
 	var methods = []
 	
-	func _init(token_name, methods).("Class"):
+	func _init(token_name, superclass, methods).("Class"):
 		self.token_name = token_name
+		self.superclass = superclass
 		self.methods = methods
 
 class Var extends Stmt:
@@ -92,7 +94,6 @@ class Function extends Stmt:
 	var body
 	
 	func _init(token_name, parameters, body).("Function"):
-		print('Func statement created from stmt line 89')
 		self.token_name = token_name
 		self.parameters = parameters
 		self.body = body

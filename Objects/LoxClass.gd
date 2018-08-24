@@ -4,10 +4,12 @@ const Callable = preload("res://Objects/LoxCallable.gd")
 
 class LoxClass extends Callable:
 	var title
+	var superclass
 	var methods
 
-	func _init(title, methods):
+	func _init(title, superclass, methods):
 		self.title = title
+		self.superclass = superclass
 		self.methods = methods
 
 	func Call(interpreter, arguments):
@@ -33,7 +35,8 @@ class LoxClass extends Callable:
 	func findMethod(instance, lexeme):
 		if methods.has(lexeme):
 			return methods[lexeme].bind(instance) # This may not work because GDScript funcs aren't class funcs
-#			return methods[lexeme]
+		if superclass != null:
+			return superclass.findMethod(instance, lexeme)
 		return null
 		
 	class Instance:
