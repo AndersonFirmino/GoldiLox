@@ -54,7 +54,7 @@ func run(source):
 	var statements = parser.parse()
 	if Error.hadError:
 		return
-
+#
 	var resolver = Resolver.new(Interpreter)
 	resolver.resolve_loop(statements)
 

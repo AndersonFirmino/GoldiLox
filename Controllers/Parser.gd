@@ -62,9 +62,9 @@ func forStatement():
 	if _match([TYPE.SEMICOLON]):
 		initializer = null
 	elif _match([TYPE.VAR]):
-		initializer = varDeclaration()
+		initializer = varDeclaration() # Might be it
 	else:
-		initializer = expressionStatement()
+		initializer = expressionStatement() # Re-Assignment
 	var condition = null;
 	if !check(TYPE.SEMICOLON):
 		condition = expression()
@@ -156,9 +156,9 @@ func assignment():
 	if _match([TYPE.EQUAL]):
 		var equals = previous()
 		var value = assignment() # Be wary of infinite loops
-		if expr.get_immediate_class() == "Variable":
-			var token_name = expr.token_name # Think this is right?
-			return Expr.Assign.new(token_name, value) # If we get an error, we haven't returned this properly
+#		if expr.get_immediate_class() == "Variable":
+		var token_name = expr.token_name # Think this is right?
+		return Expr.Assign.new(token_name, value) # If we get an error, we haven't returned this properly
 		Error.error(equals, "Invalid assignment target")
 	return expr # I don't think we reach here? 
 

@@ -34,7 +34,7 @@ class enviroment:
 	
 	
 	func assign(token_name, value):
-		if values.has(token_name.lexeme):
+		if values.has(token_name.lexeme): #
 			values[token_name.lexeme] = value
 			return
 		if enclosing != null:

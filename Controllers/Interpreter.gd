@@ -230,8 +230,8 @@ func Call(expression):
 		arguments.append(evaluate(argument))
 		
 #	if not callee is Callable:
-	if not callee.immediate_class == "Callable" or not callee.immediate_class == "Function":
-		print('class is ', callee.immediate_class, ' line 238 Interpreter')
+#	if not callee.immediate_class == "Callable" or not callee.immediate_class == "Function":
+#		print('class is ', callee.immediate_class, ' line 238 Interpreter')
 #		throw new RuntimeError(expr.paren, "Can only call functions and classes.")
 
 	var function = callee

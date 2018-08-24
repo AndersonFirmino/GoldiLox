@@ -49,7 +49,7 @@ func Return(statement):
 		
 func While(statement):
 	resolve(statement.condition)
-	resolve(statement.body) # This may need a resolve-loop
+	resolve(statement.body)
 
 	
 func Binary(expression):
@@ -64,10 +64,10 @@ func Call(expression):
 		resolve(argument)
 		
 func Grouping(expression):
-	resolve(expression)
+	resolve(expression.expression)
 	
 func Literal(expression):
-	return
+	return null
 	
 func Logical(expression):
 	resolve(expression.left)
@@ -77,7 +77,7 @@ func Unary(expression):
 	resolve(expression.right)
 	
 func resolve_loop(statements):
-	for statement in statements: # stament is do(); // for do(){}
+	for statement in statements:
 		resolve(statement)
 
 
@@ -110,7 +110,7 @@ func Var(statement):
 		resolve(statement.initializer) # This might mean resolve statements // more like expressions
 	define(statement.token_name)
 	return null
-	
+
 func declare(token_name):
 	if scopes.empty():
 		return
@@ -125,7 +125,8 @@ func define(token_name):
 	scopes.back()[token_name.lexeme] = true
 	
 func Variable(expression):
-	if not scopes.empty() and scopes.back()[expression.token_name.lexeme] == false:
+	# It iterates through each scope backwards looking for a previously defined variable, we have to include "has" because invalid index will cause a crash
+	if not scopes.empty() and scopes.back().has(expression.token_name.lexeme) and scopes.back()[expression.token_name.lexeme] == false:
 		Error.error(expression.token_name,"Cannot read local variable in its own initializer.")
 		# May need to cancel here?
 	resolveLocal(expression, expression.token_name)
@@ -134,14 +135,14 @@ func Variable(expression):
 func Assign(expression):
 	# I'm pretty confident resolve should just be able to work with one thing //
 	# This is probably resolve expression
-	resolve_expression(expression)
+	resolve(expression.value) # Is this an old version?
 	resolveLocal(expression, expression.token_name)
 	return null
 	
 func resolveLocal(expression, token_name):
-	var i = scopes.size() - 1
+	var i = scopes.size()  - 1
 	while i >= 0:
 		if scopes[i].has(token_name.lexeme): # This may be wrong
 			interpreter.resolve(expression, scopes.size() - 1 - i) # Maybe the wrong index?
-			i -= 1
 			return
+		i -= 1
