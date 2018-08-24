@@ -21,10 +21,21 @@ func expression():
 func declaration():
 	if _match([TYPE.VAR]):
 		return varDeclaration()
+	if _match([TYPE.CLASS]):
+		return classDeclaration()
 	if _match([TYPE.FUN]):
 		return function("function")
 	else:
 		return statement()
+		
+func classDeclaration():
+	var token_name = consume(TYPE.IDENTIFIER, "Expect class name.")
+	consume(TYPE.LEFT_BRACE, "Expect '{' before class body.")
+	var methods = []
+	while !check(TYPE.RIGHT_BRACE) and !isAtEnd():
+		methods.append(function("method"))
+	consume(TYPE.RIGHT_BRACE, "Expect '}' after class body")
+	return Stmt.Class.new(token_name, methods)
 		
 # Modern version that is intended to handle errors
 #func declaration():
@@ -157,9 +168,14 @@ func assignment():
 		var equals = previous()
 		var value = assignment() # Be wary of infinite loops
 #		if expr.get_immediate_class() == "Variable":
-		var token_name = expr.token_name # Think this is right?
-		return Expr.Assign.new(token_name, value) # If we get an error, we haven't returned this properly
-		Error.error(equals, "Invalid assignment target")
+		if expr is Expr.Variable:
+			var token_name = expr.token_name # Think this is right?
+			return Expr.Assign.new(token_name, value) # If we get an error, we haven't returned this properly
+		elif expr is Expr.Get:
+#			var get = expr.expr # They cast the Expression to an Expr get but GDScript does the for us already
+			return Expr.Set.new(expr.object, expr.token_name, value)
+		else:
+			Error.error(equals, "Invalid assignment target")
 	return expr # I don't think we reach here? 
 
 func Or():
@@ -246,6 +262,9 @@ func call():
 	while (true):
 		if _match([TYPE.LEFT_PAREN]):
 			expr = finishCall(expr)
+		elif _match([TYPE.DOT]):
+			var token_name = consume(TYPE.IDENTIFIER, "Expect property name after '.'.")
+			expr = Expr.Get.new(expr, token_name)
 		else:
 			break
 	return expr
@@ -254,6 +273,7 @@ func primary():
 	if _match([TYPE.FALSE]): return Expr.Literal.new(false)
 	if _match([TYPE.TRUE]): return Expr.Literal.new(true)
 	if _match([TYPE.NIL]): return Expr.Literal.new(null)
+	if _match([TYPE.THIS]): return Expr.This.new(previous())
 	# Literal is a reference to the TOKEN CLASS, not the Expression Classes
 	
 	if _match([TYPE.NUMBER, TYPE.STRING]):

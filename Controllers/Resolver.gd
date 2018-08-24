@@ -3,21 +3,46 @@ extends Node
 var interpreter
 var scopes
 var currentFunction
+var currentClass
 
 enum FunctionType {
-	NONE,
+	NONE
 	FUNCTION
+	INITIALIZER
+	METHOD
+}
+
+enum ClassType {
+	NONE
+	CLASS
 }
 
 func _init(interpreter):
 	self.interpreter = interpreter
 	self.scopes = []
 	self.currentFunction = FunctionType.NONE
+	self.currentClass = ClassType.NONE
 
 func Block(statement):
 	beginScope()
 	resolve_loop(statement.statements)
 	endScope()
+	return null
+	
+func Class(statement):
+	var enclosingClass = currentClass
+	currentClass = ClassType.CLASS
+	declare(statement.token_name)
+	define(statement.token_name)
+	beginScope()
+	scopes.back()["this"] = true
+	for method in statement.methods:
+		var declaration = FunctionType.METHOD
+		if method.token_name.lexeme == "init":
+			declaration = FunctionType.INITIALIZER # May be read as an int?
+		resolveFunction(method, declaration)
+	endScope()
+	currentClass = enclosingClass
 	return null
 	
 func Expression(statement):
@@ -35,7 +60,6 @@ func If(statement):
 	resolve(statement.thenBranch)
 	if statement.elseBranch != null:
 		resolve(statement.elseBranch)
-
 	
 func Print(statement):
 	resolve(statement.expression)
@@ -45,6 +69,8 @@ func Return(statement):
 	if currentFunction == FunctionType.NONE:
 		Error.error(statement.keyword, "Cannot return from top level code.")
 	if statement.value != null:
+		if currentFunction == FunctionType.INITIALIZER:
+			Error.error(statement.keyword, "Cannot return a value from an initializer.")
 		resolve(statement.value)
 		
 func While(statement):
@@ -62,7 +88,11 @@ func Call(expression):
 
 	for argument in expression.arguments:
 		resolve(argument)
-		
+
+func Get(expression):
+	resolve(expression.object)
+	return null
+	
 func Grouping(expression):
 	resolve(expression.expression)
 	
@@ -72,6 +102,19 @@ func Literal(expression):
 func Logical(expression):
 	resolve(expression.left)
 	resolve(expression.right)
+	
+func Set(expression):
+	resolve(expression.value)
+	resolve(expression.object)
+	return null
+	
+func This(expression):
+	if currentClass == ClassType.NONE:
+		Error.error(expression.keyword, "Cannot use 'this' outside of a class.")
+		print('error line 113, resolver')
+		return null
+	resolveLocal(expression, expression.keyword)
+	return null
 	
 func Unary(expression):
 	resolve(expression.right)

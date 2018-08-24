@@ -25,18 +25,25 @@ class Clock extends Callable:
 		
 	func toString():
 		return "<native fn>"
-		
+
+class Bind:
+	# Helper for Function
+	static func delegate(declaration, enviroment, isInitializer):
+		return load("res://Objects/LoxCallable.gd").Function.new(declaration, enviroment, isInitializer)
+
 class Function extends Callable:
 	
 	var declaration
-	var closure      
+	var closure
+	var isInitializer 
 	
 	# We store the return value to return here, defaults to null in call
 	var returnValue
 	
-	func _init(declaration, closure).("Function"):
+	func _init(declaration, closure, isInitializer).("Function"):
 		self.declaration = declaration
 		self.closure = closure # Where do we define this?
+		self.isInitializer = isInitializer
 		
 	func Call(interpreter, arguments):
 		# We initialize the return value to null
@@ -58,7 +65,17 @@ class Function extends Callable:
 		
 		# One shot is not working here?
 		# We ALWAYS return something, it will default to nil/null unless otherwise set.
+		if isInitializer:
+			return closure.getAt(0, "this")
+		
 		return returnValue
+		
+	func bind(instance):
+		var enviroment = load("res://Data/Enviroment.gd").enviroment.new(closure)
+		enviroment.define("this", instance)
+		
+		# Can't do it from inside itself, not until at least 3.1
+		return Bind.delegate(declaration, enviroment, isInitializer)
 		
 	func setReturnValue(value):
 		self.returnValue = value

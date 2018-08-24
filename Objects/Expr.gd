@@ -22,6 +22,30 @@ class Call extends Expr:
 		self.paren = paren
 		self.arguments = arguments
 		
+class Get extends Expr:
+	var object
+	var token_name
+	
+	func _init(object, token_name).("Get"):
+		self.object = object
+		self.token_name = token_name
+		
+class Set extends Expr:
+	var object
+	var token_name
+	var value
+	
+	func _init(object, token_name, value).("Set"):
+		self.object = object
+		self.token_name = token_name
+		self.value = value
+		
+class This extends Expr:
+	var keyword
+	
+	func _init(keyword).("This"):
+		self.keyword = keyword
+		
 class Assign extends Expr:
 	var token_name
 	var value

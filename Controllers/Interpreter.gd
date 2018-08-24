@@ -3,6 +3,7 @@ extends Node
 const ENVIROMENT = preload("res://Data/Enviroment.gd").enviroment
 const TYPE = preload("res://Data/Token.gd").TYPE
 const Callable = preload("res://Objects/LoxCallable.gd")
+const LoxClass = preload("res://Objects/LoxClass.gd").LoxClass
 
 
 var globals = ENVIROMENT.new(null)
@@ -37,6 +38,19 @@ func Block(statement):
 	# check one level up
 	executeBlock(statement.statements, ENVIROMENT.new(self.enviroment))
 	return null
+	
+func Class(statement):
+	enviroment.define(statement.token_name.lexeme, null)
+	var methods = {} # Resolver counterpart may require key access, rather than array loop
+	for method in statement.methods:
+		# May be an issue here?
+		var function = Callable.Function.new(method, enviroment, method.token_name.lexeme == "init")
+		methods[method.token_name.lexeme] = function
+	var klass = LoxClass.new(statement.token_name.lexeme, methods) # May need to revist this
+	enviroment.assign(statement.token_name, klass)
+	return null
+	
+
 	
 func executeBlock(statements, enviroment):
 	# We're storing the current enviroment into previous enviroment so we don't lose it
@@ -74,6 +88,18 @@ func Logical(expression):
 	
 	return evaluate(expression.right)
 	
+func Set(expression):
+	var object = evaluate(expression.object)
+	
+	if not object is LoxClass.Instance:
+		print(expression.token_name, "Only instances have fields")
+	var value = evaluate(expression.value)
+	object.set(expression.token_name, value)
+	return value
+	
+func This(expression):
+	return lookUpVariable(expression.keyword, expression)
+	
 func Grouping(expr):
 	return evaluate(expr.expression)
 	
@@ -86,7 +112,7 @@ func Expression(statement):
 	return null
 	
 func Function(statement):
-	var function = Callable.Function.new(statement, self.enviroment)
+	var function = Callable.Function.new(statement, self.enviroment, false)
 	enviroment.define(statement.token_name.lexeme, function)
 #	var function = Callable.Function.new(statement, self.enviroment)
 #
@@ -238,7 +264,14 @@ func Call(expression):
 	if arguments.size() != function.arity():
 		print(expression.paren, "Expected " + str(function.arity()) + " arguments but got " + str(arguments.size()) + ".")
 	return function.Call(self, arguments) # Pretty sure this is a class? Adding a small interpreter?
-	
+
+func Get(expression):
+	var object = evaluate(expression.object)
+	if object is LoxClass.Instance: # May need to access this from somewhere? Maybe through LoxClass.Instance instead
+		return object.get(expression.token_name) # CAREFUL HERE?
+	print(expression.token_name, "only instances have properties")
+	# RuntimeError(expression.token_name, "Only instances have properties")
+
 func isEqual(a, b):
 	# nil is only equal to nil
 	if a == null and b == null: return true
@@ -255,8 +288,10 @@ func stringify(object):
 		if text.ends_with(".0"):
 			text = text.subst(0, text.length() -2)
 		return text
-		
-	return str(object)
+	
+	if typeof(object) == TYPE_STRING:
+		return object
+	return object.toString()
 
 func checkNumberOperand(operator, operand):
 	if typeof(operand) == TYPE_REAL: 

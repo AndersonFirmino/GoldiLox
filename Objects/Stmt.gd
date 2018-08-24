@@ -69,6 +69,14 @@ class Block extends Stmt:
 	
 	func _init(statements).("Block"):
 		self.statements = statements
+		
+class Class extends Stmt:
+	var token_name
+	var methods = []
+	
+	func _init(token_name, methods).("Class"):
+		self.token_name = token_name
+		self.methods = methods
 
 class Var extends Stmt:
 	var token_name
